@@ -51,11 +51,50 @@ resp_r = resp_weather.to_s
 
  parse_resp = JSON.parse(resp_r)
 
- pp currently_hash = parse_resp.fetch("currently")
- pp currently_temp = currently_hash.fetch("temperature")
+  currently_hash = parse_resp.fetch("currently")
+  currently_temp = currently_hash.fetch("temperature")
 
  puts "It is currently #{currently_temp }°F."
 
+ minutely_hash = parse_resp.fetch("minutely", false)
+
+if minutely_hash
+  next_hour_summary = minutely_hash.fetch("summary")
+
+  puts "Next hour: #{next_hour_summary}"
+end
+
+hourly_hash = parse_resp.fetch("hourly")
+
+hourly_data_array = hourly_hash.fetch("data")
+
+next_twelve_hours = hourly_data_array[1..12]
+
+precip_prob_threshold = 0.10
+
+any_precipitation = false
+
+next_twelve_hours.each do |hour_hash|
+  precip_prob = hour_hash.fetch("precipProbability")
+
+  if precip_prob > precip_prob_threshold
+    any_precipitation = true
+
+    precip_time = Time.at(hour_hash.fetch("time"))
+
+    seconds_from_now = precip_time - Time.now
+
+    hours_from_now = seconds_from_now / 60 / 60
+
+    puts "In #{hours_from_now.round} hours, there is a #{(precip_prob * 100).round}% chance of precipitation."
+  end
+end
+
+if any_precipitation == true
+  puts "You might want to take an umbrella!"
+else
+  puts "You probably won't need an umbrella."
+end
 
 
  ##parse_r = parse_resp.to_s
